@@ -14,7 +14,9 @@ import { SidenavListComponent } from './navigation/sidenav-list/sidenav-list.com
 import { StopTrainingComponent } from './training/current-training/stop-training.component';
 import { environment } from '../environments/environment';
 import { AuthModule } from './auth/auth.module';
+import { StoreModule } from '@ngrx/store';
 import { TrainingModule } from './training/training.module';
+import { appReducer } from './app.reducer';
 
 
 @NgModule({
@@ -33,8 +35,8 @@ import { TrainingModule } from './training/training.module';
     AppRoutingModule,
     AngularFireModule.initializeApp(environment.firebase),
     AngularFirestoreModule,
-    AuthModule
-    
+    AuthModule,
+    StoreModule.forRoot({ui: appReducer})
   ],
   providers: [],
   bootstrap: [AppComponent],
