@@ -6,12 +6,16 @@ import { AngularFirestore } from 'angularfire2/firestore';
 import { map } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { UIService } from '../shared/ui.service';
+import * as fromTraining from './training.reducer';
+import * as Training from './training.actions';
+import { Store } from '@ngrx/store';
+import { take } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TrainingService {
-  constructor(private db: AngularFirestore, private uiService: UIService){}
+  constructor(private db: AngularFirestore, private uiService: UIService, private store: Store<fromTraining.TrainingState>){}
   exerciseChanged = new Subject<Exercise>();
   exercisesChanged = new Subject<Exercise[]>();
   finishedExercisesChanged = new Subject<Exercise[]>();
@@ -33,8 +37,9 @@ export class TrainingService {
         } as Exercise ;
       });
    })).subscribe((exercises:Exercise[]) =>{
-    this.availableExercises = exercises;
-    this.exercisesChanged.next([...this.availableExercises]); 
+    // this.availableExercises = exercises;
+    // this.exercisesChanged.next([...this.availableExercises]); 
+    this.store.dispatch(new Training.SetAvailableTrainings(exercises));
    }, error =>{
      this.uiService.loadingStateChanged.next(false);
      this.uiService.showSnackbar('Fetching exercises failed, Please try again later!', null, 3000);
@@ -44,46 +49,55 @@ export class TrainingService {
 
   startExercise(selectedId: string) {
    // this.db.doc('availableExercises/'+ selectedId).update({lastSelected: new Date()})
-    this.runningExercise = this.availableExercises.find(
-      ex => ex.id === selectedId
-    );
-    this.exerciseChanged.next({ ...this.runningExercise });
+    // this.runningExercise = this.availableExercises.find(
+    //   ex => ex.id === selectedId
+    // );
+    // this.exerciseChanged.next({ ...this.runningExercise });
+    this.store.dispatch(new Training.StartTraining(selectedId))
   }
 
   completeExercise() {
-        this.addDataToDatabase({
-  // this.exercises.push({
-      ...this.runningExercise,
-      date: new Date(),
-      state: 'completed'
+    this.store.select(fromTraining.getActiveTraining).pipe(take(1)).subscribe(ex=>{
+      this.addDataToDatabase({
+        // this.exercises.push({
+            ...ex,
+            date: new Date(),
+            state: 'completed'
+          });
+          // this.runningExercise = null;
+          // this.exerciseChanged.next(null);
+          this.store.dispatch(new Training.StopTraining());
     });
-    this.runningExercise = null;
-    this.exerciseChanged.next(null);
+       
   }
 
   cancelExercise(progress: number) {
-    this.addDataToDatabase({
-    //this.exercises.push({
-      ...this.runningExercise,
-      duration: this.runningExercise.duration * (progress / 100),
-      calories: this.runningExercise.calories * (progress / 100),
-      date: new Date(),
-      state: 'cancelled'
+    this.store.select(fromTraining.getActiveTraining).pipe(take(1)).subscribe(ex=>{
+      this.addDataToDatabase({
+        // this.exercises.push({
+            ...ex,
+            duration: ex.duration * (progress / 100),
+            calories: ex.calories * (progress / 100),
+            date: new Date(),
+            state: 'cancelled'
+          });
+          // this.runningExercise = null;
+          // this.exerciseChanged.next(null);
+          this.store.dispatch(new Training.StopTraining());
     });
-    this.runningExercise = null;
-    this.exerciseChanged.next(null);
   }
 
-  getRunningExercise() {
-    return { ...this.runningExercise };
-  }
+  // getRunningExercise() {
+  //   return { ...this.runningExercise };
+  // }
 
   fetchCompletedOrCancelledExercises() {
    this.fbSubs.push(this.db.collection('finishedExercise')
     .valueChanges()
     .subscribe((exercises: Exercise[]) =>{
      // this.finishedExercises = exercises;
-     this.finishedExercisesChanged.next(exercises);
+   //  this.finishedExercisesChanged.next(exercises);
+    this.store.dispatch(new Training.SetFinishedTrainings(exercises));
     }));
   }
 
