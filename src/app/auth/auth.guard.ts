@@ -9,13 +9,16 @@ import {
 import { Observable } from "rxjs";
 import { AuthService } from "./auth.service";
 import { Route } from "@angular/compiler/src/core";
+import { Store } from '@ngrx/store';
+import * as fromRoot from '../app.reducer';
+import { take } from 'rxjs/operators';
 
 @Injectable({
   providedIn: "root"
 })
 export class AuthGuard implements CanActivate, CanLoad {
  
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private store: Store<fromRoot.State>, private router: Router) {}
   canActivate(
     next: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
@@ -25,14 +28,16 @@ export class AuthGuard implements CanActivate, CanLoad {
     // } else {
     //   this.router.navigate(["/login"]);
     // }
-    return true;
+  //  return true;
+  return this.store.select(fromRoot.getIsAuth).pipe(take(1));
   }
 
   canLoad(route: Route) {
-   if (this.authService.isAuth()) {
-      return true;
-    } else {
-      this.router.navigate(["/login"]);
-    }
+  //  if (this.authService.isAuth()) {
+  //     return true;
+  //   } else {
+  //     this.router.navigate(["/login"]);
+  //   }
+    return this.store.select(fromRoot.getIsAuth).pipe(take(1));
   }
 }
