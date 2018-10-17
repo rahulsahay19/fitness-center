@@ -1,7 +1,7 @@
 <mat-table [dataSource]="dataSource">
     <ng-container matColumnDef="date">
       <mat-header-cell *matHeaderCellDef>Date</mat-header-cell>
-      <mat-cell *matCellDef="let element">{{ element | json }}</mat-cell>
+      <mat-cell *matCellDef="let element">{{ element.date.toDate("dd/mm/yyyy") | date }}</mat-cell>
     </ng-container>
   
     <ng-container matColumnDef="name">

@@ -19,10 +19,7 @@ export class TrainingService {
   exerciseChanged = new Subject<Exercise>();
   exercisesChanged = new Subject<Exercise[]>();
   finishedExercisesChanged = new Subject<Exercise[]>();
-  private availableExercises: Exercise[] = [];
-  private runningExercise: Exercise;
   private fbSubs:Subscription[] = [];
-  //private finishedExercises: Exercise[] = [];
 
   fetchAvailableExercises() {
    this.fbSubs.push(this.db.collection('availableExercise')
@@ -37,8 +34,6 @@ export class TrainingService {
         } as Exercise ;
       });
    })).subscribe((exercises:Exercise[]) =>{
-    // this.availableExercises = exercises;
-    // this.exercisesChanged.next([...this.availableExercises]); 
     this.store.dispatch(new Training.SetAvailableTrainings(exercises));
    }, error =>{
      this.uiService.loadingStateChanged.next(false);
@@ -48,24 +43,16 @@ export class TrainingService {
   }
 
   startExercise(selectedId: string) {
-   // this.db.doc('availableExercises/'+ selectedId).update({lastSelected: new Date()})
-    // this.runningExercise = this.availableExercises.find(
-    //   ex => ex.id === selectedId
-    // );
-    // this.exerciseChanged.next({ ...this.runningExercise });
     this.store.dispatch(new Training.StartTraining(selectedId))
   }
 
   completeExercise() {
     this.store.select(fromTraining.getActiveTraining).pipe(take(1)).subscribe(ex=>{
       this.addDataToDatabase({
-        // this.exercises.push({
             ...ex,
             date: new Date(),
             state: 'completed'
           });
-          // this.runningExercise = null;
-          // this.exerciseChanged.next(null);
           this.store.dispatch(new Training.StopTraining());
     });
        
@@ -74,29 +61,20 @@ export class TrainingService {
   cancelExercise(progress: number) {
     this.store.select(fromTraining.getActiveTraining).pipe(take(1)).subscribe(ex=>{
       this.addDataToDatabase({
-        // this.exercises.push({
             ...ex,
             duration: ex.duration * (progress / 100),
             calories: ex.calories * (progress / 100),
             date: new Date(),
             state: 'cancelled'
           });
-          // this.runningExercise = null;
-          // this.exerciseChanged.next(null);
           this.store.dispatch(new Training.StopTraining());
     });
   }
-
-  // getRunningExercise() {
-  //   return { ...this.runningExercise };
-  // }
 
   fetchCompletedOrCancelledExercises() {
    this.fbSubs.push(this.db.collection('finishedExercise')
     .valueChanges()
     .subscribe((exercises: Exercise[]) =>{
-     // this.finishedExercises = exercises;
-   //  this.finishedExercisesChanged.next(exercises);
     this.store.dispatch(new Training.SetFinishedTrainings(exercises));
     }));
   }

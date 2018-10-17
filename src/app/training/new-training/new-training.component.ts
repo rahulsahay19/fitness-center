@@ -1,4 +1,4 @@
-import { Component, OnInit, EventEmitter, Output, OnDestroy } from '@angular/core';
+import { Component, OnInit, EventEmitter, Output } from '@angular/core';
 import { TrainingService } from '../training.service';
 import { Exercise } from '../exercise.model';
 import { NgForm } from '@angular/forms';
@@ -21,17 +21,12 @@ export class NewTrainingComponent implements OnInit{
   constructor(private trainingService:TrainingService, private db: AngularFirestore, private store:Store<fromTraining.State>) { }
 
   ngOnInit() {
-   // this.exercises = this.trainingService.getAvailableExercises();
-  // this.exerciseSubscription = this.trainingService
-  //                                 .exercisesChanged
-  //                                 .subscribe(exercises => this.exercises = exercises);
-  this.exercises$ = this.store.select(fromTraining.getAvailableExercises);
-   this.trainingService.fetchAvailableExercises();
+    this.exercises$ = this.store.select(fromTraining.getAvailableExercises);
+    this.trainingService.fetchAvailableExercises();
 }
 
 
   onStartTraining(form: NgForm){
-    //this.trainingStart.emit(form.value.exercise);
     this.trainingService.startExercise(form.value.exercise);
   }
 
